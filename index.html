@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<!-- saved from url=(0047)file:///C:/Users/Dell/Downloads/instrucalc.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InstaCalculator — Instrumentation Engineering Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap');
+
+  :root {
+    --bg: #0a0f1a;
+    --panel: #111827;
+    --border: #1e3a5f;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --green: #00ff9d;
+    --text: #c8dce8;
+    --muted: #4a6a8a;
+    --card: #0d1b2e;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(0,212,255,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(255,107,53,0.04) 0%, transparent 60%);
+  }
+
+  header {
+    background: linear-gradient(135deg, #0d1b2e, #111827);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+
+  .header-content {
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+
+  .logo span { color: var(--accent2); }
+
+  .tagline {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .version {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  .main { max-width: 480px; margin: 0 auto; padding: 16px; }
+
+  /* Calculator Grid */
+  .calc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .calc-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .calc-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .calc-btn:hover, .calc-btn.active {
+    border-color: var(--accent);
+    background: rgba(0,212,255,0.06);
+    transform: translateY(-1px);
+  }
+
+  .calc-btn:hover::before, .calc-btn.active::before { opacity: 1; }
+
+  .calc-btn.active { box-shadow: 0 0 20px rgba(0,212,255,0.15); }
+
+  .calc-icon { font-size: 22px; margin-bottom: 6px; }
+
+  .calc-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    line-height: 1.3;
+  }
+
+  /* Calculator Panel */
+  .calc-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: none;
+    animation: slideIn 0.3s ease;
+  }
+
+  .calc-panel.visible { display: block; }
+
+  @keyframes slideIn {
+    from { opacity:0; transform: translateY(10px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  .panel-header {
+    background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(0,212,255,0.05));
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .panel-icon { font-size: 20px; }
+
+  .panel-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+
+  .panel-body { padding: 16px; }
+
+  .field-group { margin-bottom: 14px; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  input, select {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus { border-color: var(--accent); }
+
+  select option { background: var(--panel); color: var(--text); }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .calc-btn-main {
+    width: 100%;
+    background: linear-gradient(135deg, #0a3a6a, #0d4a8a);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 2px;
+    padding: 12px;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: all 0.2s;
+  }
+
+  .calc-btn-main:hover {
+    background: linear-gradient(135deg, #0d4a8a, #1a5aaa);
+    box-shadow: 0 0 20px rgba(0,212,255,0.2);
+  }
+
+  .result-box {
+    margin-top: 16px;
+    background: rgba(0,255,157,0.05);
+    border: 1px solid rgba(0,255,157,0.2);
+    border-radius: 8px;
+    padding: 14px;
+    display: none;
+  }
+
+  .result-box.visible { display: block; }
+
+  .result-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'Share Tech Mono', monospace;
+    margin-bottom: 6px;
+  }
+
+  .result-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 24px;
+    color: var(--green);
+    font-weight: bold;
+  }
+
+  .result-unit {
+    font-size: 13px;
+    color: var(--muted);
+    margin-left: 6px;
+  }
+
+  .result-details {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .error-box {
+    margin-top: 16px;
+    background: rgba(255,60,60,0.08);
+    border: 1px solid rgba(255,60,60,0.3);
+    border-radius: 8px;
+    padding: 12px;
+    color: #ff8a8a;
+    font-size: 12px;
+    display: none;
+  }
+
+  .error-box.visible { display: block; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 14px 0;
+  }
+
+  .formula-box {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+
+  .formula-box span { color: var(--accent2); }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+    font-size: 11px;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-content">
+    <div>
+      <div class="logo">Insta<span>Calculator</span></div>
+      <div class="tagline">Instrumentation Engineering Calculator</div>
+    </div>
+    <div class="version">v1.0</div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- Calculator Selection Grid -->
+  <div class="calc-grid">
+    <div class="calc-btn" onclick="showCalc(&#39;ma4_20&#39;)" id="btn-ma4_20">
+      <div class="calc-icon">⚡</div>
+      <div class="calc-name">4-20mA Scaling</div>
+    </div>
+    <div class="calc-btn active" onclick="showCalc(&#39;orifice&#39;)" id="btn-orifice">
+      <div class="calc-icon">🌀</div>
+      <div class="calc-name">Orifice Flow</div>
+    </div>
+    <div class="calc-btn" onclick="showCalc(&#39;rtd&#39;)" id="btn-rtd">
+      <div class="calc-icon">🌡️</div>
+      <div class="calc-name">RTD / PT100</div>
+    </div>
+    <div class="calc-btn" onclick="showCalc(&#39;tc&#39;)" id="btn-tc">
+      <div class="calc-icon">🔥</div>
+      <div class="calc-name">Thermocouple</div>
+    </div>
+    <div class="calc-btn" onclick="showCalc(&#39;pid&#39;)" id="btn-pid">
+      <div class="calc-icon">🎛️</div>
+      <div class="calc-name">PID Tuning</div>
+    </div>
+    <div class="calc-btn" onclick="showCalc(&#39;pressure&#39;)" id="btn-pressure">
+      <div class="calc-icon">📊</div>
+      <div class="calc-name">Pressure Convert</div>
+    </div>
+    <div class="calc-btn" onclick="showCalc(&#39;level&#39;)" id="btn-level">
+      <div class="calc-icon">💧</div>
+      <div class="calc-name">Level to Volume</div>
+    </div>
+    <div class="calc-btn" onclick="showCalc(&#39;valve&#39;)" id="btn-valve">
+      <div class="calc-icon">🔧</div>
+      <div class="calc-name">Control Valve Cv</div>
+    </div>
+  </div>
+
+  <!-- 1. 4-20mA Scaling -->
+  <div class="calc-panel" id="calc-ma4_20">
+    <div class="panel-header">
+      <div class="panel-icon">⚡</div>
+      <div class="panel-title">4-20mA SIGNAL SCALING</div>
+    </div>
+    <div class="panel-body">
+      <div class="formula-box">
+        <span>PV = PV_min + (I - 4) × (PV_max - PV_min) / 16</span><br>
+        I = current in mA, PV = process variable
+      </div>
+      <div class="field-group">
+        <label>Current Signal (mA)</label>
+        <input type="number" id="ma_current" placeholder="e.g. 12" step="0.01">
+      </div>
+      <div class="row-2">
+        <div class="field-group">
+          <label>PV Minimum</label>
+          <input type="number" id="ma_min" placeholder="e.g. 0">
+        </div>
+        <div class="field-group">
+          <label>PV Maximum</label>
+          <input type="number" id="ma_max" placeholder="e.g. 100">
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Engineering Unit</label>
+        <input type="text" id="ma_unit" placeholder="e.g. bar, °C, m³/h">
+      </div>
+      <button class="calc-btn-main" onclick="calc_ma4_20()">▶ CALCULATE</button>
+      <div class="result-box" id="res-ma4_20">
+        <div class="result-label">Process Variable</div>
+        <div><span class="result-value" id="res-ma4_20-val">20</span><span class="result-unit" id="res-ma4_20-unit"> ma</span></div>
+        <div class="result-details" id="res-ma4_20-det">Signal: 20 mA &nbsp;|&nbsp; Scale: 100.0%<br>Range: 4 to 20 ma<br>PV = 4 + (20 - 4) × 16 / 16</div>
+      </div>
+      <div class="error-box visible" id="err-ma4_20">⚠ Current must be between 4 and 20 mA</div>
+    </div>
+  </div>
+
+  <!-- 2. Orifice Flow -->
+  <div class="calc-panel visible" id="calc-orifice">
+    <div class="panel-header">
+      <div class="panel-icon">🌀</div>
+      <div class="panel-title">ORIFICE PLATE FLOW</div>
+    </div>
+    <div class="panel-body">
+      <div class="formula-box">
+        <span>Q = Cd × A × √(2ΔP / ρ)</span><br>
+        Simplified DP flowmeter calculation
+      </div>
+      <div class="row-2">
+        <div class="field-group">
+          <label>Pipe Diameter (mm)</label>
+          <input type="number" id="or_pipe" placeholder="e.g. 100">
+        </div>
+        <div class="field-group">
+          <label>Orifice Diameter (mm)</label>
+          <input type="number" id="or_orifice" placeholder="e.g. 60">
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="field-group">
+          <label>Diff. Pressure (mbar)</label>
+          <input type="number" id="or_dp" placeholder="e.g. 250">
+        </div>
+        <div class="field-group">
+          <label>Fluid Density (kg/m³)</label>
+          <input type="number" id="or_density" placeholder="e.g. 1000">
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Discharge Coefficient (Cd)</label>
+        <input type="number" id="or_cd" placeholder="0.6" value="0.6" step="0.01">
+      </div>
+      <button class="calc-btn-main" onclick="calc_orifice()">▶ CALCULATE</button>
+      <div class="result-box" id="res-orifice">
+        <div class="result-label">Volumetric Flow Rate</div>
+        <div><span class="result-value" id="res-orifice-val">--</span><span class="result-unit">m³/h</span></div>
+        <div class="result-details" id="res-orifice-det"></div>
+      </div>
+      <div class="error-box" id="err-orifice"></div>
+    </div>
+  </div>
+
+  <!-- 3. RTD PT100 -->
+  <div class="calc-panel" id="calc-rtd">
+    <div class="panel-header">
+      <div class="panel-icon">🌡️</div>
+      <div class="panel-title">RTD / PT100 CALCULATOR</div>
+    </div>
+    <div class="panel-body">
+      <div class="formula-box">
+        <span>R = R0(1 + αT)</span> (simplified)<br>
+        PT100: R0=100Ω, α=0.00385/°C
+      </div>
+      <div class="field-group">
+        <label>Calculation Mode</label>
+        <select id="rtd_mode" onchange="toggleRTDMode()">
+          <option value="r_to_t">Resistance → Temperature</option>
+          <option value="t_to_r">Temperature → Resistance</option>
+        </select>
+      </div>
+      <div id="rtd_r_input" class="field-group">
+        <label>Measured Resistance (Ω)</label>
+        <input type="number" id="rtd_resistance" placeholder="e.g. 138.5" step="0.01">
+      </div>
+      <div id="rtd_t_input" class="field-group" style="display:none">
+        <label>Temperature (°C)</label>
+        <input type="number" id="rtd_temp" placeholder="e.g. 100" step="0.1">
+      </div>
+      <div class="field-group">
+        <label>RTD Type</label>
+        <select id="rtd_type">
+          <option value="pt100">PT100 (R0=100Ω)</option>
+          <option value="pt1000">PT1000 (R0=1000Ω)</option>
+          <option value="ni100">Ni100 (α=0.00617)</option>
+        </select>
+      </div>
+      <button class="calc-btn-main" onclick="calc_rtd()">▶ CALCULATE</button>
+      <div class="result-box" id="res-rtd">
+        <div class="result-label" id="res-rtd-label">Temperature</div>
+        <div><span class="result-value" id="res-rtd-val">--</span><span class="result-unit" id="res-rtd-unit">°C</span></div>
+        <div class="result-details" id="res-rtd-det"></div>
+      </div>
+      <div class="error-box" id="err-rtd"></div>
+    </div>
+  </div>
+
+  <!-- 4. Thermocouple -->
+  <div class="calc-panel" id="calc-tc">
+    <div class="panel-header">
+      <div class="panel-icon">🔥</div>
+      <div class="panel-title">THERMOCOUPLE mV CONVERTER</div>
+    </div>
+    <div class="panel-body">
+      <div class="formula-box">
+        Converts mV output to temperature using<br>
+        <span>standard thermocouple tables</span>
+      </div>
+      <div class="field-group">
+        <label>Thermocouple Type</label>
+        <select id="tc_type">
+          <option value="K">Type K (Chromel-Alumel) -200 to 1372°C</option>
+          <option value="J">Type J (Iron-Constantan) -210 to 1200°C</option>
+          <option value="T">Type T (Copper-Constantan) -270 to 400°C</option>
+          <option value="E">Type E (Chromel-Constantan) -270 to 1000°C</option>
+          <option value="S">Type S (Pt/Rh-Pt) 0 to 1768°C</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Millivolt Output (mV)</label>
+        <input type="number" id="tc_mv" placeholder="e.g. 12.207" step="0.001">
+      </div>
+      <div class="field-group">
+        <label>Cold Junction Temp (°C)</label>
+        <input type="number" id="tc_cjc" placeholder="e.g. 25" value="25" step="0.1">
+      </div>
+      <button class="calc-btn-main" onclick="calc_tc()">▶ CALCULATE</button>
+      <div class="result-box" id="res-tc">
+        <div class="result-label">Temperature</div>
+        <div><span class="result-value" id="res-tc-val">--</span><span class="result-unit">°C</span></div>
+        <div class="result-details" id="res-tc-det"></div>
+      </div>
+      <div class="error-box" id="err-tc"></div>
+    </div>
+  </div>
+
+  <!-- 5. PID Tuning -->
+  <div class="calc-panel" id="calc-pid">
+    <div class="panel-header">
+      <div class="panel-icon">🎛️</div>
+      <div class="panel-title">PID TUNING (ZIEGLER-NICHOLS)</div>
+    </div>
+    <div class="panel-body">
+      <div class="formula-box">
+        Step response method:<br>
+        <span>K=process gain, L=dead time, T=time constant</span>
+      </div>
+      <div class="row-2">
+        <div class="field-group">
+          <label>Process Gain (K)</label>
+          <input type="number" id="pid_k" placeholder="e.g. 2.5" step="0.01">
+        </div>
+        <div class="field-group">
+          <label>Dead Time L (s)</label>
+          <input type="number" id="pid_l" placeholder="e.g. 5" step="0.1">
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Time Constant T (s)</label>
+        <input type="number" id="pid_t" placeholder="e.g. 30" step="0.1">
+      </div>
+      <div class="field-group">
+        <label>Controller Type</label>
+        <select id="pid_type">
+          <option value="pid">PID</option>
+          <option value="pi">PI</option>
+          <option value="p">P only</option>
+        </select>
+      </div>
+      <button class="calc-btn-main" onclick="calc_pid()">▶ CALCULATE</button>
+      <div class="result-box" id="res-pid">
+        <div class="result-label">Tuning Parameters</div>
+        <div class="result-details" id="res-pid-det"></div>
+      </div>
+      <div class="error-box" id="err-pid"></div>
+    </div>
+  </div>
+
+  <!-- 6. Pressure Converter -->
+  <div class="calc-panel" id="calc-pressure">
+    <div class="panel-header">
+      <div class="panel-icon">📊</div>
+      <div class="panel-title">PRESSURE UNIT CONVERTER</div>
+    </div>
+    <div class="panel-body">
+      <div class="row-2">
+        <div class="field-group">
+          <label>Value</label>
+          <input type="number" id="pr_value" placeholder="e.g. 1.0" step="any">
+        </div>
+        <div class="field-group">
+          <label>From Unit</label>
+          <select id="pr_from">
+            <option value="bar">bar</option>
+            <option value="psi">psi</option>
+            <option value="kpa">kPa</option>
+            <option value="mpa">MPa</option>
+            <option value="atm">atm</option>
+            <option value="mmhg">mmHg</option>
+            <option value="mmh2o">mmH₂O</option>
+            <option value="mbar">mbar</option>
+            <option value="pa">Pa</option>
+            <option value="inhg">inHg</option>
+          </select>
+        </div>
+      </div>
+      <button class="calc-btn-main" onclick="calc_pressure()">▶ CONVERT ALL UNITS</button>
+      <div class="result-box" id="res-pressure">
+        <div class="result-label">Converted Values</div>
+        <div class="result-details" id="res-pressure-det"></div>
+      </div>
+      <div class="error-box" id="err-pressure"></div>
+    </div>
+  </div>
+
+  <!-- 7. Level to Volume -->
+  <div class="calc-panel" id="calc-level">
+    <div class="panel-header">
+      <div class="panel-icon">💧</div>
+      <div class="panel-title">LEVEL TO VOLUME</div>
+    </div>
+    <div class="panel-body">
+      <div class="field-group">
+        <label>Tank Shape</label>
+        <select id="lv_shape" onchange="updateTankFields()">
+          <option value="vertical_cylinder">Vertical Cylinder</option>
+          <option value="horizontal_cylinder">Horizontal Cylinder</option>
+          <option value="rectangular">Rectangular Tank</option>
+          <option value="cone_bottom">Cone Bottom Tank</option>
+        </select>
+      </div>
+      <div id="lv_fields">
+      <div class="row-2">
+        <div class="field-group"><label>Diameter (m)</label><input type="number" id="lv_dia" placeholder="e.g. 2.0" step="0.01"></div>
+        <div class="field-group"><label>Total Height (m)</label><input type="number" id="lv_total_h" placeholder="e.g. 5.0" step="0.01"></div>
+      </div>
+      <div class="field-group"><label>Current Level (m)</label><input type="number" id="lv_level" placeholder="e.g. 3.2" step="0.01"></div></div>
+      <button class="calc-btn-main" onclick="calc_level()">▶ CALCULATE</button>
+      <div class="result-box visible" id="res-level">
+        <div class="result-label">Volume</div>
+        <div><span class="result-value" id="res-level-val">25.03</span><span class="result-unit">m³</span></div>
+        <div class="result-details" id="res-level-det">Level: 2m / 5m &nbsp;|&nbsp; Fill: 70.8%<br>Total capacity: 35.343 m³<br>In litres: 25030.2 L</div>
+      </div>
+      <div class="error-box" id="err-level"></div>
+    </div>
+  </div>
+
+  <!-- 8. Control Valve Cv -->
+  <div class="calc-panel" id="calc-valve">
+    <div class="panel-header">
+      <div class="panel-icon">🔧</div>
+      <div class="panel-title">CONTROL VALVE Cv CALCULATOR</div>
+    </div>
+    <div class="panel-body">
+      <div class="formula-box">
+        <span>Cv = Q × √(SG / ΔP)</span><br>
+        Q=flow(gpm), SG=specific gravity, ΔP=psi
+      </div>
+      <div class="field-group">
+        <label>Fluid Type</label>
+        <select id="cv_fluid">
+          <option value="liquid">Liquid</option>
+          <option value="gas">Gas</option>
+        </select>
+      </div>
+      <div class="row-2">
+        <div class="field-group">
+          <label>Flow Rate (m³/h)</label>
+          <input type="number" id="cv_flow" placeholder="e.g. 10" step="0.1">
+        </div>
+        <div class="field-group">
+          <label>Specific Gravity</label>
+          <input type="number" id="cv_sg" placeholder="1.0 for water" value="1.0" step="0.01">
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="field-group">
+          <label>Inlet Pressure (bar)</label>
+          <input type="number" id="cv_p1" placeholder="e.g. 6.0" step="0.1">
+        </div>
+        <div class="field-group">
+          <label>Outlet Pressure (bar)</label>
+          <input type="number" id="cv_p2" placeholder="e.g. 4.0" step="0.1">
+        </div>
+      </div>
+      <button class="calc-btn-main" onclick="calc_valve()">▶ CALCULATE</button>
+      <div class="result-box" id="res-valve">
+        <div class="result-label">Required Cv</div>
+        <div><span class="result-value" id="res-valve-val">--</span><span class="result-unit">Cv</span></div>
+        <div class="result-details" id="res-valve-det"></div>
+      </div>
+      <div class="error-box" id="err-valve"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  InstaCalculator v1.0 &nbsp;|&nbsp; Instrumentation Engineering Tools<br>
+  by Mohd Usman &nbsp;|&nbsp; stl-to-ladder.vercel.app
+</footer>
+
+<script>
+// Show/hide calculator panels
+function showCalc(id) {
+  document.querySelectorAll('.calc-panel').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.calc-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('calc-' + id).classList.add('visible');
+  document.getElementById('btn-' + id).classList.add('active');
+  document.getElementById('calc-' + id).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showResult(id, value, details) {
+  document.getElementById('res-' + id).classList.add('visible');
+  document.getElementById('err-' + id).classList.remove('visible');
+  if (value !== null) document.getElementById('res-' + id + '-val').textContent = value;
+  if (details) document.getElementById('res-' + id + '-det').innerHTML = details;
+}
+
+function showError(id, msg) {
+  document.getElementById('err-' + id).textContent = '⚠ ' + msg;
+  document.getElementById('err-' + id).classList.add('visible');
+  document.getElementById('res-' + id).classList.remove('visible');
+}
+
+function fmt(n, d) { return parseFloat(n.toFixed(d || 3)).toString(); }
+
+// 1. 4-20mA Scaling
+function calc_ma4_20() {
+  const I = parseFloat(document.getElementById('ma_current').value);
+  const min = parseFloat(document.getElementById('ma_min').value);
+  const max = parseFloat(document.getElementById('ma_max').value);
+  const unit = document.getElementById('ma_unit').value || '';
+  if (isNaN(I) || isNaN(min) || isNaN(max)) return showError('ma4_20', 'Please fill all fields');
+  if (I < 4 || I > 20) return showError('ma4_20', 'Current must be between 4 and 20 mA');
+  const pv = min + (I - 4) * (max - min) / 16;
+  const pct = ((I - 4) / 16 * 100).toFixed(1);
+  document.getElementById('res-ma4_20-unit').textContent = ' ' + unit;
+  showResult('ma4_20', fmt(pv, 3), `Signal: ${fmt(I,3)} mA &nbsp;|&nbsp; Scale: ${pct}%<br>Range: ${min} to ${max} ${unit}<br>PV = ${min} + (${fmt(I,2)} - 4) × ${max-min} / 16`);
+}
+
+// 2. Orifice Flow
+function calc_orifice() {
+  const D = parseFloat(document.getElementById('or_pipe').value) / 1000;
+  const d = parseFloat(document.getElementById('or_orifice').value) / 1000;
+  const dP = parseFloat(document.getElementById('or_dp').value) * 100;
+  const rho = parseFloat(document.getElementById('or_density').value);
+  const Cd = parseFloat(document.getElementById('or_cd').value);
+  if (isNaN(D)||isNaN(d)||isNaN(dP)||isNaN(rho)||isNaN(Cd)) return showError('orifice','Please fill all fields');
+  if (d >= D) return showError('orifice', 'Orifice diameter must be less than pipe diameter');
+  const beta = d / D;
+  const A = Math.PI * d * d / 4;
+  const E = 1 / Math.sqrt(1 - Math.pow(beta, 4));
+  const Q = Cd * E * A * Math.sqrt(2 * dP / rho);
+  const Qh = Q * 3600;
+  const vel = Q / (Math.PI * D * D / 4);
+  showResult('orifice', fmt(Qh, 3), `Beta ratio (d/D): ${fmt(beta, 3)}<br>Velocity at pipe: ${fmt(vel, 3)} m/s<br>Mass flow: ${fmt(Qh * rho, 1)} kg/h<br>DP: ${dP/100} mbar`);
+}
+
+// 3. RTD PT100
+function toggleRTDMode() {
+  const mode = document.getElementById('rtd_mode').value;
+  document.getElementById('rtd_r_input').style.display = mode === 'r_to_t' ? 'block' : 'none';
+  document.getElementById('rtd_t_input').style.display = mode === 't_to_r' ? 'block' : 'none';
+}
+
+function calc_rtd() {
+  const mode = document.getElementById('rtd_mode').value;
+  const type = document.getElementById('rtd_type').value;
+  let R0 = 100, alpha = 0.00385;
+  if (type === 'pt1000') { R0 = 1000; alpha = 0.00385; }
+  if (type === 'ni100')  { R0 = 100;  alpha = 0.00617; }
+
+  if (mode === 'r_to_t') {
+    const R = parseFloat(document.getElementById('rtd_resistance').value);
+    if (isNaN(R)) return showError('rtd', 'Please enter resistance value');
+    const T = (R - R0) / (R0 * alpha);
+    document.getElementById('res-rtd-label').textContent = 'Temperature';
+    document.getElementById('res-rtd-unit').textContent = '°C';
+    showResult('rtd', fmt(T, 2), `Resistance: ${R} Ω<br>R0: ${R0} Ω &nbsp;|&nbsp; α: ${alpha}/°C<br>T = (${R} - ${R0}) / (${R0} × ${alpha})`);
+  } else {
+    const T = parseFloat(document.getElementById('rtd_temp').value);
+    if (isNaN(T)) return showError('rtd', 'Please enter temperature value');
+    const R = R0 * (1 + alpha * T);
+    document.getElementById('res-rtd-label').textContent = 'Resistance';
+    document.getElementById('res-rtd-unit').textContent = 'Ω';
+    showResult('rtd', fmt(R, 3), `Temperature: ${T}°C<br>R0: ${R0} Ω &nbsp;|&nbsp; α: ${alpha}/°C<br>R = ${R0} × (1 + ${alpha} × ${T})`);
+  }
+}
+
+// 4. Thermocouple - simplified linear approximation
+function calc_tc() {
+  const type = document.getElementById('tc_type').value;
+  const mv = parseFloat(document.getElementById('tc_mv').value);
+  const cjc = parseFloat(document.getElementById('tc_cjc').value) || 0;
+  if (isNaN(mv)) return showError('tc', 'Please enter mV value');
+
+  // Sensitivity (µV/°C) and offset for approximate conversion
+  const sensitivity = { K: 40.96, J: 52.23, T: 40.68, E: 68.78, S: 10.0 };
+  const sens = sensitivity[type];
+  const mv_cjc = cjc * sens / 1000;
+  const total_mv = mv + mv_cjc;
+  const temp = (total_mv * 1000) / sens;
+
+  const ranges = { K:'−200 to 1372°C', J:'−210 to 1200°C', T:'−270 to 400°C', E:'−270 to 1000°C', S:'0 to 1768°C' };
+  showResult('tc', fmt(temp, 1), `Type ${type} thermocouple<br>Input: ${mv} mV &nbsp;|&nbsp; CJC: ${cjc}°C<br>Sensitivity: ${sens} µV/°C<br>Range: ${ranges[type]}<br><i>Note: Approximate linear calculation</i>`);
+}
+
+// 5. PID Tuning (Ziegler-Nichols step response)
+function calc_pid() {
+  const K = parseFloat(document.getElementById('pid_k').value);
+  const L = parseFloat(document.getElementById('pid_l').value);
+  const T = parseFloat(document.getElementById('pid_t').value);
+  const type = document.getElementById('pid_type').value;
+  if (isNaN(K)||isNaN(L)||isNaN(T)) return showError('pid','Please fill all fields');
+  if (L <= 0 || T <= 0 || K <= 0) return showError('pid', 'All values must be positive');
+
+  let Kp, Ti, Td, details;
+  if (type === 'pid') {
+    Kp = 1.2 * T / (K * L);
+    Ti = 2 * L;
+    Td = 0.5 * L;
+    details = `<b style="color:var(--green)">Kp = ${fmt(Kp,3)}</b><br><b style="color:var(--green)">Ti = ${fmt(Ti,2)} s &nbsp;(Ki = ${fmt(1/Ti,4)})</b><br><b style="color:var(--green)">Td = ${fmt(Td,2)} s &nbsp;(Kd = ${fmt(Kp*Td,3)})</b>`;
+  } else if (type === 'pi') {
+    Kp = 0.9 * T / (K * L);
+    Ti = 3.33 * L;
+    details = `<b style="color:var(--green)">Kp = ${fmt(Kp,3)}</b><br><b style="color:var(--green)">Ti = ${fmt(Ti,2)} s &nbsp;(Ki = ${fmt(1/Ti,4)})</b><br>Td = 0 (PI controller)`;
+  } else {
+    Kp = T / (K * L);
+    details = `<b style="color:var(--green)">Kp = ${fmt(Kp,3)}</b><br>Ti = ∞ &nbsp;|&nbsp; Td = 0<br>(P-only controller)`;
+  }
+  details += `<br><br>Process: K=${K}, L=${L}s, T=${T}s<br><i>Method: Ziegler-Nichols Step Response</i>`;
+  showResult('pid', null, details);
+}
+
+// 6. Pressure Converter
+function calc_pressure() {
+  const val = parseFloat(document.getElementById('pr_value').value);
+  const from = document.getElementById('pr_from').value;
+  if (isNaN(val)) return showError('pressure', 'Please enter a value');
+
+  // Convert to Pa first
+  const toPa = { bar:1e5, psi:6894.757, kpa:1e3, mpa:1e6, atm:101325, mmhg:133.322, mmh2o:9.80665, mbar:100, pa:1, inhg:3386.39 };
+  const fromPa = { bar:1e-5, psi:1/6894.757, kpa:1e-3, mpa:1e-6, atm:1/101325, mmhg:1/133.322, mmh2o:1/9.80665, mbar:0.01, pa:1, inhg:1/3386.39 };
+
+  const pa = val * toPa[from];
+  const units = ['bar','psi','kPa','MPa','atm','mmHg','mmH₂O','mbar','Pa','inHg'];
+  const keys =  ['bar','psi','kpa','mpa','atm','mmhg','mmh2o','mbar','pa','inhg'];
+
+  let det = '';
+  keys.forEach((k, i) => {
+    const converted = pa * fromPa[k];
+    const highlight = k === from ? ' style="color:var(--accent)"' : '';
+    det += `<span${highlight}>${units[i].padEnd(8,' ')}: ${fmt(converted, converted > 100 ? 2 : 5)}</span><br>`;
+  });
+  showResult('pressure', null, det);
+}
+
+// 7. Level to Volume
+function updateTankFields() {
+  const shape = document.getElementById('lv_shape').value;
+  const container = document.getElementById('lv_fields');
+  if (shape === 'rectangular') {
+    container.innerHTML = `
+      <div class="row-2">
+        <div class="field-group"><label>Length (m)</label><input type="number" id="lv_len" placeholder="e.g. 4.0" step="0.01"></div>
+        <div class="field-group"><label>Width (m)</label><input type="number" id="lv_wid" placeholder="e.g. 2.0" step="0.01"></div>
+      </div>
+      <div class="row-2">
+        <div class="field-group"><label>Total Height (m)</label><input type="number" id="lv_total_h" placeholder="e.g. 3.0" step="0.01"></div>
+        <div class="field-group"><label>Current Level (m)</label><input type="number" id="lv_level" placeholder="e.g. 1.5" step="0.01"></div>
+      </div>`;
+  } else {
+    container.innerHTML = `
+      <div class="row-2">
+        <div class="field-group"><label>Diameter (m)</label><input type="number" id="lv_dia" placeholder="e.g. 2.0" step="0.01"></div>
+        <div class="field-group"><label>Total Height (m)</label><input type="number" id="lv_total_h" placeholder="e.g. 5.0" step="0.01"></div>
+      </div>
+      <div class="field-group"><label>Current Level (m)</label><input type="number" id="lv_level" placeholder="e.g. 3.2" step="0.01"></div>`;
+  }
+}
+
+function calc_level() {
+  const shape = document.getElementById('lv_shape').value;
+  const H = parseFloat(document.getElementById('lv_total_h').value);
+  const h = parseFloat(document.getElementById('lv_level').value);
+  if (isNaN(H) || isNaN(h)) return showError('level', 'Please fill all fields');
+  if (h > H) return showError('level', 'Current level cannot exceed total height');
+
+  let V, totalV, pct;
+  if (shape === 'rectangular') {
+    const L = parseFloat(document.getElementById('lv_len').value);
+    const W = parseFloat(document.getElementById('lv_wid').value);
+    if (isNaN(L)||isNaN(W)) return showError('level','Please fill all fields');
+    V = L * W * h;
+    totalV = L * W * H;
+  } else {
+    const D = parseFloat(document.getElementById('lv_dia').value);
+    if (isNaN(D)) return showError('level','Please enter diameter');
+    const r = D / 2;
+    if (shape === 'vertical_cylinder') {
+      V = Math.PI * r * r * h;
+      totalV = Math.PI * r * r * H;
+    } else if (shape === 'horizontal_cylinder') {
+      const theta = 2 * Math.acos((r - h) / r);
+      V = r * r * (theta - Math.sin(theta)) / 2 * H;
+      totalV = Math.PI * r * r * H / 2 * 2;
+    } else { // cone bottom
+      const coneH = H * 0.2;
+      const cylH = H * 0.8;
+      const coneV = Math.PI * r * r * coneH / 3;
+      if (h <= coneH) {
+        const rH = r * h / coneH;
+        V = Math.PI * rH * rH * h / 3;
+      } else {
+        V = coneV + Math.PI * r * r * (h - coneH);
+      }
+      totalV = coneV + Math.PI * r * r * cylH;
+    }
+  }
+  pct = (V / totalV * 100).toFixed(1);
+  showResult('level', fmt(V, 3), `Level: ${h}m / ${H}m &nbsp;|&nbsp; Fill: ${pct}%<br>Total capacity: ${fmt(totalV, 3)} m³<br>In litres: ${fmt(V*1000, 1)} L`);
+}
+
+// 8. Control Valve Cv
+function calc_valve() {
+  const Q_m3h = parseFloat(document.getElementById('cv_flow').value);
+  const SG = parseFloat(document.getElementById('cv_sg').value);
+  const P1 = parseFloat(document.getElementById('cv_p1').value);
+  const P2 = parseFloat(document.getElementById('cv_p2').value);
+  if (isNaN(Q_m3h)||isNaN(SG)||isNaN(P1)||isNaN(P2)) return showError('valve','Please fill all fields');
+  if (P1 <= P2) return showError('valve', 'Inlet pressure must be greater than outlet pressure');
+
+  const dP_psi = (P1 - P2) * 14.5038;
+  const Q_gpm = Q_m3h * 4.40287;
+  const Cv = Q_gpm * Math.sqrt(SG / dP_psi);
+  const Kv = Cv * 0.8647;
+  const vel = Q_m3h / 3600;
+
+  showResult('valve', fmt(Cv, 2), `Kv = ${fmt(Kv, 2)} (metric)<br>ΔP = ${fmt(P1-P2, 3)} bar = ${fmt(dP_psi, 2)} psi<br>Flow = ${Q_m3h} m³/h = ${fmt(Q_gpm, 2)} GPM<br>SG = ${SG}<br><br>Select next standard Cv size above ${fmt(Cv,1)}`);
+}
+</script>
+
+
+</body></html>
